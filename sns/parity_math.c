@@ -178,10 +178,21 @@ static void fail_idx_xor_recover(struct m0_parity_math *math,
 				 struct m0_buf *parity,
 				 const uint32_t failure_index);
 
+#if RS_ENCODE_ENABLED
 static void fail_idx_reed_solomon_recover(struct m0_parity_math *math,
 					  struct m0_buf *data,
 					  struct m0_buf *parity,
 					  const uint32_t failure_index);
+#endif /* RS_ENCODE_ENABLED */
+
+#if ISAL_ENCODE_ENABLED
+/** @todo Iterative reed-solomon decode to be implemented. */
+static void fail_idx_isal_recover(struct m0_parity_math *math,
+				  struct m0_buf *data,
+				  struct m0_buf *parity,
+				  const uint32_t failure_index);
+#endif /* ISAL_ENCODE_ENABLED */
+
 /**
  * Inverts the encoding matrix and generates a recovery matrix for lost data.
  * When all failed blocks are parity blocks this function plays no role.
@@ -307,7 +318,11 @@ static void (*fidx_recover[M0_PARITY_CAL_ALGO_NR])(struct m0_parity_math *math,
 						   struct m0_buf *parity,
 						   const uint32_t fidx) = {
 	[M0_PARITY_CAL_ALGO_XOR] = fail_idx_xor_recover,
+#if ISAL_ENCODE_ENABLED
+	[M0_PARITY_CAL_ALGO_ISA] = fail_idx_isal_recover,
+#else
 	[M0_PARITY_CAL_ALGO_REED_SOLOMON] = fail_idx_reed_solomon_recover,
+#endif /* ISAL_ENCODE_ENABLED */
 };
 
 enum {
@@ -868,7 +883,6 @@ static void recovery_vec_fill(struct m0_parity_math *math,
 		}
 	}
 }
-#endif /* RS_ENCODE_ENABLED */
 
 /* Fills 'mat' with data passed to recovery algorithm. */
 static void recovery_mat_fill(struct m0_parity_math *math,
@@ -890,7 +904,6 @@ static void recovery_mat_fill(struct m0_parity_math *math,
 	}
 }
 
-#if RS_ENCODE_ENABLED
 /* Updates internal structures of 'math' with recovered data. */
 static void parity_math_recover(struct m0_parity_math *math,
 				uint8_t *fail, uint32_t unit_count,
@@ -915,7 +928,6 @@ static void parity_math_recover(struct m0_parity_math *math,
 		}
 	}
 }
-#endif /* RS_ENCODE_ENABLED */
 
 M0_INTERNAL int m0_parity_recov_mat_gen(struct m0_parity_math *math,
 					uint8_t *fail)
@@ -935,6 +947,7 @@ M0_INTERNAL void m0_parity_recov_mat_destroy(struct m0_parity_math *math)
 {
 	m0_matrix_fini(&math->pmi_recov_mat);
 }
+#endif /* RS_ENCODE_ENABLED */
 
 static void xor_recover(struct m0_parity_math *math,
 			struct m0_buf *data,
@@ -1360,6 +1373,7 @@ static void fail_idx_xor_recover(struct m0_parity_math *math,
 
 }
 
+#if RS_ENCODE_ENABLED
 /** @todo Iterative reed-solomon decode to be implemented. */
 static void fail_idx_reed_solomon_recover(struct m0_parity_math *math,
 					  struct m0_buf *data,
@@ -1367,6 +1381,19 @@ static void fail_idx_reed_solomon_recover(struct m0_parity_math *math,
 					  const uint32_t failure_index)
 {
 }
+#endif /* RS_ENCODE_ENABLED */
+
+#if ISAL_ENCODE_ENABLED
+static void fail_idx_isal_recover(struct m0_parity_math *math,
+				  struct m0_buf *data,
+				  struct m0_buf *parity,
+				  const uint32_t failure_index)
+{
+	M0_ERR_INFO(-ENOSYS, "Recover using failed index is not supported "
+		    "for Intel ISA");
+	M0_ASSERT(0);
+}
+#endif /* ISAL_ENCODE_ENABLED */
 
 M0_INTERNAL void m0_parity_math_fail_index_recover(struct m0_parity_math *math,
 						   struct m0_buf *data,
