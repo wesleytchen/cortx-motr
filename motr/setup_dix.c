@@ -344,9 +344,9 @@ M0_INTERNAL int m0_cs_dix_setup(struct m0_motr *cctx)
 	M0_ASSERT(pver != NULL);
 	pm = &pver->pv_mach;
 	m0_rwlock_read_lock(&pm->pm_lock);
-	M0_ASSERT(!pver->pv_is_dirty);
-	M0_ASSERT(pool_failed_devs_tlist_is_empty(
-					&pver->pv_pool->po_failed_devices));
+//	M0_ASSERT(!pver->pv_is_dirty);
+//	M0_ASSERT(pool_failed_devs_tlist_is_empty(
+//					&pver->pv_pool->po_failed_devices));
 
 	/* Purpose of this check is to skip UTs with incorrect DIX root pver. */
 	if (!cs_dix_pver_is_valid(pc, pver)) {
@@ -399,8 +399,8 @@ M0_INTERNAL int m0_cs_dix_setup(struct m0_motr *cctx)
 	 */
 	for (i = 0; i < pm->pm_state->pst_nr_devices; ++i) {
 		sdev = &pm->pm_state->pst_devices_array[i];
-		M0_ASSERT(M0_IN(sdev->pd_state, (M0_PNDS_ONLINE,
-						 M0_PNDS_SNS_REBALANCING)));
+//		M0_ASSERT(M0_IN(sdev->pd_state, (M0_PNDS_ONLINE,
+//						 M0_PNDS_SNS_REBALANCING)));
 		sdev_idx = sdev->pd_sdev_idx;
 		cas_svc = pc->pc_dev2svc[sdev_idx].pds_ctx;
 		M0_ASSERT(cas_svc->sc_type == M0_CST_CAS);
