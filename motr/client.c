@@ -37,6 +37,8 @@
 #define M0_TRACE_SUBSYSTEM M0_TRACE_SUBSYS_CLIENT
 #include "lib/trace.h"
 #include "lib/finject.h"
+#include <time.h>
+
 /**
  * Bob definitions
  */
@@ -224,9 +226,24 @@ struct m0_sm_conf entity_conf = {
 M0_INTERNAL struct m0_client *
 m0__entity_instance(const struct m0_entity *entity)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	M0_PRE(entity != NULL);
 	M0_PRE(entity->en_realm != NULL);
 	M0_PRE(entity->en_realm->re_instance != NULL);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0__entity_instance", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
 
 	return entity->en_realm->re_instance;
 }
@@ -234,12 +251,27 @@ m0__entity_instance(const struct m0_entity *entity)
 M0_INTERNAL struct m0_client *
 m0__op_instance(const struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_entity *entity;
 	M0_PRE(op != NULL);
 
 	entity = op->op_code == M0_EO_SYNC ?
 		m0__op_sync_entity(op) : op->op_entity;
 	M0_PRE(entity != NULL);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0__op_instance", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
 
 	return m0__entity_instance(entity);
 }
@@ -259,7 +291,22 @@ m0__is_oostore(struct m0_client *instance)
 M0_INTERNAL struct m0_client *
 m0__obj_instance(const struct m0_obj *obj)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	M0_PRE(obj != NULL);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0__obj_instance", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
 
 	return m0__entity_instance(&obj->ob_entity);
 }
@@ -290,6 +337,9 @@ M0_INTERNAL bool m0_entity_type_is_valid(enum m0_entity_type type)
 
 M0_INTERNAL bool entity_invariant_full(struct m0_entity *ent)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	bool                rc = false;
 	struct m0_sm_group *grp;
 
@@ -299,6 +349,19 @@ M0_INTERNAL bool entity_invariant_full(struct m0_entity *ent)
 		rc = entity_invariant_locked(ent);
 		m0_sm_group_unlock(grp);
 	}
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "entity_invariant_full", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	return M0_RC(rc);
 }
 
@@ -364,6 +427,9 @@ M0_INTERNAL void m0_entity_init(struct m0_entity *entity,
 				const struct m0_uint128 *id,
 				const enum m0_entity_type type)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_sm_group *grp;
 
 	M0_ENTRY();
@@ -388,6 +454,19 @@ M0_INTERNAL void m0_entity_init(struct m0_entity *entity,
 	m0_mutex_init(&entity->en_pending_tx_lock);
 	spti_tlist_init(&entity->en_pending_tx);
 	M0_ASSERT(entity_invariant_full(entity));
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_entity_init", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 
@@ -396,6 +475,9 @@ void m0_obj_init(struct m0_obj *obj,
 		 const struct m0_uint128 *id,
 		 uint64_t layout_id)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	M0_ENTRY();
 
 	M0_PRE(obj != NULL);
@@ -417,12 +499,27 @@ void m0_obj_init(struct m0_obj *obj,
 	ospti_tlist_init(&obj->ob_pending_tx);
 #endif
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_obj_init", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 M0_EXPORTED(m0_obj_init);
 
 void m0_entity_fini(struct m0_entity *entity)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_reqh_service_txid *iter;
 
 	M0_ENTRY();
@@ -446,12 +543,27 @@ void m0_entity_fini(struct m0_entity *entity)
 	m0_sm_group_unlock(&entity->en_sm_group);
 	m0_sm_group_fini(&entity->en_sm_group);
 	M0_SET0(entity);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_entity_fini", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 M0_EXPORTED(m0_entity_fini);
 
 void m0_obj_fini(struct m0_obj *obj)
 {
+	// Record start time
+	time_t time_start = time(NULL);
 
 	M0_CLIENT_THREAD_ENTER;
 
@@ -466,6 +578,18 @@ void m0_obj_fini(struct m0_obj *obj)
 	}
 	m0_entity_fini(&obj->ob_entity);
 	M0_SET0(obj);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_obj_fini", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
 
 	M0_LEAVE();
 }
@@ -485,6 +609,9 @@ M0_EXPORTED(m0_obj_fini);
  */
 M0_INTERNAL int m0_op_executed(struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	M0_ENTRY();
 
 	M0_ASSERT(m0_op_invariant(op));
@@ -492,6 +619,18 @@ M0_INTERNAL int m0_op_executed(struct m0_op *op)
 	/* Call the op:executed callback if one is present */
 	if (op->op_cbs != NULL && op->op_cbs->oop_executed != NULL)
 		op->op_cbs->oop_executed(op);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_executed", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
 
 	return M0_RC(-1);
 }
@@ -505,6 +644,9 @@ M0_INTERNAL int m0_op_executed(struct m0_op *op)
  */
 M0_INTERNAL int m0_op_stable(struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_client *m0c;
 
 	M0_ENTRY();
@@ -520,6 +662,18 @@ M0_INTERNAL int m0_op_stable(struct m0_op *op)
 	if (!M0_FI_ENABLED("skip_ongoing_io_ref"))
 		m0__io_ref_put(m0c);
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_stable", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	return M0_RC(-1);
 }
 
@@ -533,6 +687,9 @@ M0_INTERNAL int m0_op_stable(struct m0_op *op)
  */
 M0_INTERNAL int m0_op_failed(struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_client *m0c;
 
 	M0_ENTRY();
@@ -548,11 +705,26 @@ M0_INTERNAL int m0_op_failed(struct m0_op *op)
 	if (!M0_FI_ENABLED("skip_ongoing_io_ref"))
 		m0__io_ref_put(m0c);
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_failed", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	return M0_RC(-1);
 }
 
 M0_INTERNAL int m0_op_get(struct m0_op **op, size_t size)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	int rc = 0;
 
 	M0_ENTRY();
@@ -561,13 +733,39 @@ M0_INTERNAL int m0_op_get(struct m0_op **op, size_t size)
 	/* Allocate the op if necessary. */
 	if (*op == NULL) {
 		rc = m0_op_alloc(op, size);
-		if (rc != 0)
+		if (rc != 0) {
+			// Record end time
+			time_t time_end = time(NULL);
+
+			// Open the output file with append
+			FILE *fptr;
+			fptr = fopen("client_benchmark.csv","a");
+	
+			// Output to file
+			fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_get", time_start, 
+				time_end, time_end - time_start);
+			fclose(fptr);
+
 			return M0_ERR(rc);
+		}
 	} else {
 		size_t cached_size = (*op)->op_size;
 
-		if ((*op)->op_size < size)
+		if ((*op)->op_size < size) {
+			// Record end time
+			time_t time_end = time(NULL);
+
+			// Open the output file with append
+			FILE *fptr;
+			fptr = fopen("client_benchmark.csv","a");
+	
+			// Output to file
+			fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_get", time_start, 
+				time_end, time_end - time_start);
+			fclose(fptr);
+
 			return M0_ERR(-EMSGSIZE);
+		}
 
 		/* 0 the pre-allocated operation. */
 		memset(*op, 0, cached_size);
@@ -575,6 +773,19 @@ M0_INTERNAL int m0_op_get(struct m0_op **op, size_t size)
 	}
 	m0_mutex_init(&(*op)->op_pending_tx_lock);
 	spti_tlist_init(&(*op)->op_pending_tx);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_get", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	return M0_RC(0);
 }
 
@@ -584,6 +795,9 @@ M0_INTERNAL int m0_op_get(struct m0_op **op, size_t size)
  */
 M0_INTERNAL void m0_op_cancel_one(struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_op_common *oc;
 
 	M0_ENTRY();
@@ -619,11 +833,26 @@ M0_INTERNAL void m0_op_cancel_one(struct m0_op *op)
 	/* Call the op-type's cancel function */
 	m0_sm_group_unlock(&op->op_sm_group);
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_cancel_one", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 
 void m0_op_cancel(struct m0_op **op, uint32_t nr)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	int i;
 	struct m0_entity *entity;
 
@@ -637,12 +866,27 @@ void m0_op_cancel(struct m0_op **op, uint32_t nr)
 			m0_op_cancel_one(op[i]);
 	}
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_cancel", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 M0_EXPORTED(m0_op_cancel);
 
 static void addb2_add_op_attrs(const struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_entity *entity;
 	uint64_t                 oid;
 
@@ -657,6 +901,18 @@ static void addb2_add_op_attrs(const struct m0_op *op)
 			     entity->en_type);
 	M0_ADDB2_ADD(M0_AVI_ATTR, oid, M0_AVI_OP_ATTR_CODE,
 		     op->op_code);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "addb2_add_op_attrs", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
 }
 
 /**
@@ -671,6 +927,9 @@ static void addb2_add_op_attrs(const struct m0_op *op)
  */
 M0_INTERNAL void m0_op_launch_one(struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_op_common        *oc;
 	struct m0_client           *m0c;
 	int                         rc;
@@ -694,6 +953,19 @@ M0_INTERNAL void m0_op_launch_one(struct m0_op *op)
 		m0_sm_move(&op->op_sm, rc, M0_OS_FAILED);
 		op->op_rc = rc;
 		m0_sm_group_unlock(&op->op_sm_group);
+
+		// Record end time
+		time_t time_end = time(NULL);
+
+		// Open the output file with append
+		FILE *fptr;
+		fptr = fopen("client_benchmark.csv","a");
+	
+		// Output to file
+		fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_launch_one", time_start, 
+			time_end, time_end - time_start);
+		fclose(fptr);
+
 		return;
 	}
 
@@ -705,11 +977,26 @@ M0_INTERNAL void m0_op_launch_one(struct m0_op *op)
 	oc->oc_cb_launch(oc);
 	m0_sm_group_unlock(&op->op_sm_group);
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_launch_one", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 
 void m0_op_launch(struct m0_op **op, uint32_t nr)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	int i;
 
 	M0_ENTRY();
@@ -718,6 +1005,18 @@ void m0_op_launch(struct m0_op **op, uint32_t nr)
 	for (i = 0; i < nr; i++)
 		m0_op_launch_one(op[i]);
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_launch", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 M0_EXPORTED(m0_op_launch);
@@ -725,6 +1024,9 @@ M0_EXPORTED(m0_op_launch);
 int32_t m0_op_wait(struct m0_op *op, uint64_t bits,
 		   m0_time_t to)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	int32_t   rc;
 
 	M0_ENTRY();
@@ -746,6 +1048,19 @@ int32_t m0_op_wait(struct m0_op *op, uint64_t bits,
 	 * No point checking sm in one of bits states - it may have moved
 	 * while we released the locks
 	 */
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_wait", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	return M0_RC(rc);
 }
 M0_EXPORTED(m0_op_wait);
@@ -764,6 +1079,9 @@ M0_EXPORTED(m0_op_wait);
  */
 M0_INTERNAL int m0_op_alloc(struct m0_op **op, size_t op_size)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	M0_ENTRY();
 
 	M0_PRE(op != NULL);
@@ -772,9 +1090,34 @@ M0_INTERNAL int m0_op_alloc(struct m0_op **op, size_t op_size)
 
 	/* Allocate the operation */
 	*op = m0_alloc(op_size);
-	if (*op == NULL)
+	if (*op == NULL) {
+		// Record end time
+		time_t time_end = time(NULL);
+
+		// Open the output file with append
+		FILE *fptr;
+		fptr = fopen("client_benchmark.csv","a");
+	
+		// Output to file
+		fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_alloc", time_start, 
+			time_end, time_end - time_start);
+		fclose(fptr);
+
 		return M0_ERR(-ENOMEM);
+	}
 	(*op)->op_size = op_size;
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_alloc", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
 
 	return M0_RC(0);
 }
@@ -793,12 +1136,28 @@ M0_INTERNAL int m0_op_init(struct m0_op *op,
 			   const struct m0_sm_conf *conf,
 			   struct m0_entity *entity)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_sm_group *grp;
 
 	M0_ENTRY();
 
-	if (M0_FI_ENABLED("fail_op_init"))
+	if (M0_FI_ENABLED("fail_op_init")) {
+		// Record end time
+		time_t time_end = time(NULL);
+
+		// Open the output file with append
+		FILE *fptr;
+		fptr = fopen("client_benchmark.csv","a");
+	
+		// Output to file
+		fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_init", time_start, 
+			time_end, time_end - time_start);
+		fclose(fptr);
+
 		return M0_ERR(-EINVAL);
+	}
 
 	M0_PRE(op != NULL);
 	M0_PRE(conf != NULL);
@@ -827,11 +1186,26 @@ M0_INTERNAL int m0_op_init(struct m0_op *op,
 	m0_sm_group_unlock(grp);
 	m0_mutex_init(&op->op_priv_lock);
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_init", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	return M0_RC(0);
 }
 
 void m0_op_fini(struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_op_common        *oc;
 	struct m0_sm_group         *grp;
 
@@ -858,12 +1232,27 @@ void m0_op_fini(struct m0_op *op)
 	/* Finalise op's bob */
 	m0_op_bob_fini(op);
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_fini", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 M0_EXPORTED(m0_op_fini);
 
 void m0_op_free(struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	struct m0_op_common *oc;
 	struct m0_op_obj    *oo;
 
@@ -881,6 +1270,18 @@ void m0_op_free(struct m0_op *op)
 	else
 		m0_free(oo);
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_free", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 M0_EXPORTED(m0_op_free);
@@ -889,6 +1290,9 @@ void m0_op_setup(struct m0_op *op,
 		 const struct m0_op_ops *cbs,
 		 m0_time_t linger)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	M0_ENTRY();
 
 	M0_PRE(op != NULL);
@@ -897,12 +1301,27 @@ void m0_op_setup(struct m0_op *op,
 	op->op_cbs = cbs;
 	op->op_linger = linger;
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_setup", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 M0_EXPORTED(m0_op_setup);
 
 void m0_op_kick(struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	M0_ENTRY();
 
 	M0_PRE(op != NULL);
@@ -916,14 +1335,42 @@ void m0_op_kick(struct m0_op *op)
 	 *         operations that are to-be-launched to be launched from
 	 *         here */
 
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_op_kick", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	M0_LEAVE();
 }
 M0_EXPORTED(m0_op_kick);
 
 int32_t m0_rc(const struct m0_op *op)
 {
+	// Record start time
+	time_t time_start = time(NULL);
+
 	M0_ENTRY();
 	M0_PRE(op != NULL);
+
+	// Record end time
+	time_t time_end = time(NULL);
+
+	// Open the output file with append
+	FILE *fptr;
+	fptr = fopen("client_benchmark.csv","a");
+	
+	// Output to file
+	fprintf(fptr, "%s,%ld,%ld,%ld\n", "m0_rc", time_start, 
+		time_end, time_end - time_start);
+	fclose(fptr);
+
 	return M0_RC(op->op_rc);
 }
 M0_EXPORTED(m0_rc);
